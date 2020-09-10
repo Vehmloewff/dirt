@@ -4,6 +4,6 @@ Simply runs the command file.  This defaults to `.config/commands.ts`, but can b
 
 ## Installation
 
-```ts
-deno install 
+```sh
+deno install --unstable --allow-run https://raw.githubusercontent.com/Vehmloewff/dew-cli/master/dew.ts
 ```
