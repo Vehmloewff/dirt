@@ -7,7 +7,7 @@ Simply runs the dirt tasks file. This defaults to `.config/tasks.ts`, but can be
 ## Installation
 
 ```sh
-deno install --unstable --allow-run https://raw.githubusercontent.com/Vehmloewff/dirt-cli/master/dirt.ts
+deno install --allow-read --allow-run --allow-env --unstable https://deno.land/x/dirt-cli/dirt.ts
 ```
 
 ```sh
