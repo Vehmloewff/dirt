@@ -1,5 +1,5 @@
 import { CTX } from '../mod.ts'
-import yargs from 'yargs'
+import yargs from 'https://denopkg.com/yargs/yargs-parser@v20.0.0-deno/deno.ts'
 import { tweakObject, makeArray } from '../utils.ts'
 
 let task: string | null = null

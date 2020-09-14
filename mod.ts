@@ -1,8 +1,8 @@
-import Logger from 'logger'
+import Logger from 'https://deno.land/x/logger/logger.ts'
 import importMap from './lib/import-map.ts'
 import parseArgs from './lib/parse-args.ts'
-import { recursiveReaddir } from 'read-dir'
-import { globToRegExp } from 'path'
+import { recursiveReaddir } from 'https://deno.land/x/recursive_readdir/mod.ts'
+import { globToRegExp } from 'https://deno.land/std/path/mod.ts'
 import { addWatcher } from './lib/watch.ts'
 
 const tasks: Map<string, Action> = new Map()
