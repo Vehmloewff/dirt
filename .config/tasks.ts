@@ -27,15 +27,7 @@ dirt.addTask('dev', async (_, ctx) => {
 })
 
 dirt.addTask('default', async () => {
-	await dirt.runCommand('echo hi')
-	console.log(await dirt.bundle('mod.ts'))
-})
-
-dirt.addTask('shims', async (_, ctx) => {
-	await dirt.runWatchIf(ctx.flags.watch, 'lib/deno-shim.js', async () => {
-		const data = await Deno.readTextFile('lib/deno-shim.js')
-		Deno.writeTextFile(`lib/deno-shim.ts`, 'export default `' + data + '`')
-	})
+	console.log('hi')
 })
 
 dirt.go()
