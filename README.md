@@ -1,15 +1,62 @@
-# Dirt CLI
+# Deno Run Tool (dirt)
 
-Cli for [Dirt](https://github.com/Vehmloewff/dirt).
+[![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/dirt/mod.ts)
 
-Simply runs the dirt tasks file. This defaults to `.config/tasks.ts`, but can be overridden with the `DIRT_TASKS_FILE` environment variable. By default the importmap is set to `.config/deps.json`, but this too can be changed with the `DIRT_IMPORT_MAP` environment variable.
+Run your build/run tasks in style!
 
-## Installation
+## Example
 
-```sh
-deno install --allow-read --allow-run --allow-env --unstable https://deno.land/x/dirt-cli/dirt.ts
+```ts
+// .config/tasks.ts
+
+import * as dirt from 'http://deno.land/x/dirt/mod.ts'
+
+dirt.addTask('test', async ([type], ctx) => {
+	let glob = '**/*'
+
+	if (type === 'unit') glob = 'tests/unit/**/*'
+	else if (type) glob = type
+
+	// only watches the file system if the --watch or -w flag is provided
+	await dirt.watchIf(ctx.flags.watch, '**/*.ts', async () => {
+		await dirt.runTests(glob, { allowAll: true })
+	})
+})
+
+dirt.addTask('bundle', async () => {
+	const code = await dirt.bundle('mod.ts')
+	await dirt.write('.config/public/build.js', code)
+})
+
+dirt.addTask('dev', async (_, ctx) => {
+	await dirt.runCommand('deno run -A https://deno.land/x/serve/mod.ts .config/public')
+
+	await dirt.watchIf(ctx.flags.watch, async () => {
+		await dirt.runTask('bundle')
+	})
+})
+
+dirt.go()
 ```
 
+You can run the tasks like this:
+
 ```sh
-Usage: dirt [task] [options]
+dirt [task]
 ```
+
+## Installing the CLI
+
+```sh
+deno install --unstable --allow-run --allow-env --allow-read http://deno.land/x/dirt/dirt.ts
+```
+
+## Usage
+
+```ts
+import * as dirt from 'http://deno.land/x/dirt/mod.ts'
+```
+
+## Documentation
+
+Docs can be found [here](https://doc.deno.land/https/deno.land/x/dirt/mod.ts).

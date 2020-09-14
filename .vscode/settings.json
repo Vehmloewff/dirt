@@ -1,3 +1,5 @@
 {
-	"deno.enable": true
+	"deno.enable": true,
+	"deno.unstable": true,
+	"deno.import_map": "./.config/deps.json"
 }
