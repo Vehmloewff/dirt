@@ -4,6 +4,8 @@ import parseArgs from './lib/parse-args.ts'
 import { recursiveReaddir } from 'https://deno.land/x/recursive_readdir/mod.ts'
 import { globToRegExp } from 'https://deno.land/std/path/mod.ts'
 import { addWatcher } from './lib/watch.ts'
+import { filesFromGlob } from './lib/files-from-glob.ts'
+import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
 
 const tasks: Map<string, Action> = new Map()
 
@@ -111,15 +113,6 @@ export async function runCommand(cmd: string | string[], options: RunCommandOpti
 	} else return { success: (await process.status()).success, output: `` }
 }
 
-export interface DenoPermissions {
-	all?: boolean
-	env?: boolean
-	hrtime?: boolean
-	net?: boolean | string
-	read?: boolean | string
-	write?: boolean | string
-}
-
 export interface RunFileOptions extends RunCommandOptions {
 	permissions?: DenoPermissions
 	args?: string[]
@@ -130,34 +123,9 @@ export interface RunFileOptions extends RunCommandOptions {
  * @param path The location of the file you want to run
  */
 export async function runFile(path: string, opts: RunFileOptions = {}): Promise<{ success: boolean; output: string }> {
-	const stringifyPermissions = (): string[] => {
-		const permissions = opts.permissions || {}
-		const strung: string[] = []
-
-		if (permissions.all) strung.push(`-A`)
-		else {
-			if (permissions.env) strung.push(`--allow-env`)
-			if (permissions.hrtime) strung.push(`--allow-hrtime`)
-			if (permissions.net) {
-				strung.push(`--allow-net`)
-				if (typeof permissions.net === 'string') strung.push(permissions.net)
-			}
-			if (permissions.read) {
-				strung.push(`--allow-read`)
-				if (typeof permissions.read === 'string') strung.push(permissions.read)
-			}
-			if (permissions.write) {
-				strung.push(`--allow-write`)
-				if (typeof permissions.write === 'string') strung.push(permissions.write)
-			}
-		}
-
-		return strung
-	}
-
 	const args = opts.args || []
 
-	return await runCommand([`deno`, `run`, `--unstable`, ...importMap(), ...stringifyPermissions(), path, ...args], {
+	return await runCommand([`deno`, `run`, `--unstable`, ...importMap(), ...stringifyPermissions(opts.permissions || {}), path, ...args], {
 		cwd: opts.cwd,
 		env: opts.env,
 		storeOutput: opts.storeOutput,
@@ -166,14 +134,18 @@ export async function runFile(path: string, opts: RunFileOptions = {}): Promise<
 
 interface RunTestsOptions {
 	hideOutput?: boolean
+	permissions?: DenoPermissions
 }
 
 /** Runs the tests matching the glob */
 export async function runTests(glob: string, opts: RunTestsOptions = {}): Promise<boolean> {
 	return (
-		await runCommand([`deno`, `test`, `--unstable`, ...importMap(), glob], {
-			storeOutput: opts.hideOutput,
-		})
+		await runCommand(
+			[`deno`, `test`, ...stringifyPermissions(opts.permissions || {}), `--unstable`, ...importMap(), ...(await filesFromGlob(glob))],
+			{
+				storeOutput: opts.hideOutput,
+			}
+		)
 	).success
 }
 
@@ -208,9 +180,6 @@ export async function bundle(path: string): Promise<string> {
 
 	return await Deno.readTextFile(file)
 }
-
-/** Adds a shim for the Deno namespace using denofill */
-export async function staticServer() {}
 
 /**
  * Starts the dirt task runner.  This should be called after all tasks have been added.
