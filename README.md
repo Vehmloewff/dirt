@@ -19,7 +19,11 @@ dirt.addTask('test', async ([type], ctx) => {
 
 	// only watches the file system if the --watch or -w flag is provided
 	await dirt.watchIf(ctx.flags.watch, '**/*.ts', async () => {
-		await dirt.runTests(glob, { allowAll: true })
+		await dirt.runTests(glob, {
+			permissions: {
+				all: true,
+			},
+		})
 	})
 })
 
@@ -39,10 +43,10 @@ dirt.addTask('dev', async (_, ctx) => {
 dirt.go()
 ```
 
-You can run the tasks like this:
+After installing the CLI, you can run a particular task like this:
 
 ```sh
-dirt [task]
+dirt [task] [options] [args]
 ```
 
 ## Installing the CLI
