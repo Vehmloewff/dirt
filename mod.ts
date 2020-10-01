@@ -7,6 +7,7 @@ import { addWatcher } from './lib/watch.ts'
 import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
 import { makeHackle } from 'https://deno.land/x/hackle/mod.ts'
+import { consoleLogger } from 'https://deno.land/x/hackle@v1.0.0/tools.ts'
 
 const tasks: Map<string, Action> = new Map()
 
@@ -157,16 +158,25 @@ export async function runTests(glob: string, opts: RunTestsOptions = {}): Promis
  * match 'glob' and run 'onChange' every time there is a change them. */
 export async function runWatchIf(condition: any, glob: string, onChange: (filesChanged: string[]) => MaybePromise<void>) {
 	const filterFiles = (files: string[]) => files.filter(file => globToRegExp(glob).test(file))
+
 	let files = await recursiveReaddir('.')
 
+	// Run the change handler once with all the files that pass the glob...
 	await onChange(filterFiles(files))
 
+	// ...then watch for future changes if condition is truthy
 	if (condition)
 		return new Promise(() => {
 			let timeout: any
 			addWatcher(files => {
-				clearTimeout(timeout)
-				timeout = setTimeout(() => onChange(filterFiles(files)), 300)
+				const filteredFiles = filterFiles(files)
+
+				if (filteredFiles.length !== 0) {
+					clearTimeout(timeout)
+					timeout = setTimeout(() => {
+						onChange(filteredFiles)
+					}, 300)
+				}
 			})
 		})
 }
