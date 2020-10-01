@@ -1,3 +1,4 @@
+import 'https://deno.land/x/hackle/init.ts'
 import * as dirt from '../mod.ts'
 
 dirt.addTask('test', async ([type], ctx) => {
@@ -21,13 +22,13 @@ dirt.addTask('dev', async (_, ctx) => {
 	dirt.runCommand('deno run -A https://deno.land/x/serve/mod.ts .config/public')
 
 	await dirt.runWatchIf(ctx.flags.watch, '**/*.ts', async () => {
-		console.log('hi')
+		print('hi')
 		await dirt.runTask('bundle')
 	})
 })
 
 dirt.addTask('default', async () => {
-	console.log('hi')
+	print('hi')
 })
 
 dirt.go()

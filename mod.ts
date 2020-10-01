@@ -6,6 +6,7 @@ import { globToRegExp } from 'https://deno.land/std/path/mod.ts'
 import { addWatcher } from './lib/watch.ts'
 import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
+import { makeHackle } from 'https://deno.land/x/hackle/mod.ts'
 
 const tasks: Map<string, Action> = new Map()
 
@@ -39,7 +40,10 @@ export interface CTX {
 
 export type Action = (args: string[], ctx: CTX) => MaybePromise<void>
 
+/** @deprecated Will be removed in the next major release.  Use https://deno.land/x/logger instead */
 export const logger = new Logger()
+
+const hackle = makeHackle()
 
 /**
  * Adds a task.  The task will run once 'dirt.go()' is called if the first CLI arg matches
@@ -57,22 +61,22 @@ export async function runTask(name: string): Promise<boolean> {
 	const action = tasks.get(name)
 
 	if (!action) {
-		logger.error(`Could not find task '${name}'.`)
+		hackle.error(`Could not find task '${name}'.`)
 		return false
 	}
 
 	const { args, flags } = parseArgs()
 
-	logger.info(`Running task '${name}'...`)
+	hackle.info(`Found task '${name}'`)
 
 	try {
 		await action(args, { flags })
-		logger.info(`Task '${name}' succeeded.`)
+		hackle.info(`Task '${name}' succeeded`)
 
 		return true
 	} catch (e) {
-		logger.error(e)
-		logger.error(`Task '${name}' failed.`)
+		hackle.error(e)
+		hackle.error(`Task '${name}' failed`)
 
 		return false
 	}
