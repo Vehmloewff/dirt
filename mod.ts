@@ -191,11 +191,14 @@ export async function bundle(path: string): Promise<string> {
 
 /**
  * Starts the dirt task runner.  This should be called after all tasks have been added.
+ * If `beforeTasks` is supplied, dirt will be run it before continuing with the task specified
+ * via the CLI args.
  */
-export async function go() {
+export async function go(beforeTasks?: Task) {
 	const { task } = parseArgs()
 
-	runTask(task)
+	if (beforeTasks) runTask(task)
+}
 
 //
 // Private Helpers
