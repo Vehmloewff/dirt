@@ -189,6 +189,17 @@ export async function bundle(path: string): Promise<string> {
 	return await Deno.readTextFile(file)
 }
 
+/** Restarts the current process */
+export function restart(file = '.config/tasks.ts') {
+	addWatcher(files => {
+		if (files.indexOf(file) !== -1) {
+			hackle.notice(`Restart ${file}\n`)
+			runCommand(['deno', 'run', '-A', '--unstable', ...importMap(), file, ...Deno.args])
+			Deno.exit()
+		}
+	})
+}
+
 /**
  * Starts the dirt task runner.  This should be called after all tasks have been added.
  * If `beforeTasks` is supplied, dirt will be run it before continuing with the task specified
