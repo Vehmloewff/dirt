@@ -43,23 +43,25 @@ dirt.addTask('dev', async (_, ctx) => {
 dirt.go()
 ```
 
-After installing the CLI, you can run a particular task like this:
+## CLI
 
-```sh
-dirt [task] [options] [args]
-```
-
-## Installing the CLI
+You can use the following command to install and update the CLI.
 
 ```sh
 deno install --unstable --allow-run --allow-env --allow-read http://deno.land/x/dirt/dirt.ts
+```
+
+After installing the CLI, you can run a particular task like this:
+
+````sh
+dirt [task] [options] [args]
 ```
 
 ## Usage
 
 ```ts
 import * as dirt from 'http://deno.land/x/dirt/mod.ts'
-```
+````
 
 ## Documentation
 
