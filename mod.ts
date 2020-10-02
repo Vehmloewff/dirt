@@ -8,7 +8,7 @@ import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
 import { makeHackle } from 'https://deno.land/x/hackle/mod.ts'
 
-const tasks: Map<string, Action> = new Map()
+const tasks: Map<string, Task> = new Map()
 
 type MaybePromise<T> = Promise<T> | T
 
@@ -38,7 +38,9 @@ export interface CTX {
 	}
 }
 
-export type Action = (args: string[], ctx: CTX) => MaybePromise<void>
+export type Task = (args: string[], ctx: CTX) => MaybePromise<void>
+
+export type Action = Task
 
 /** @deprecated Will be removed in the next major release.  Use https://deno.land/x/logger instead */
 export const logger = new Logger()
@@ -49,8 +51,8 @@ const hackle = makeHackle()
  * Adds a task.  The task will run once 'dirt.go()' is called if the first CLI arg matches
  * the name of the task.  The task under the name 'default' will run if there are no CLI args.
  */
-export async function addTask(name: string, action: Action) {
-	tasks.set(name, action)
+export async function addTask(name: string, task: Task) {
+	tasks.set(name, task)
 }
 
 /**
@@ -58,28 +60,20 @@ export async function addTask(name: string, action: Action) {
  * @returns A boolean indicating if the task succeeded or not.
  */
 export async function runTask(name: string): Promise<boolean> {
-	const action = tasks.get(name)
+	const task = tasks.get(name)
 
-	if (!action) {
+	if (!task) {
 		hackle.error(`Could not find task '${name}'.`)
 		return false
 	}
 
-	const { args, flags } = parseArgs()
+	const { passed, error } = await executeTask(task)
 
-	hackle.info(`Found task '${name}'`)
+	if (passed) hackle.info(`Ran task '${name}'`)
+	if (error) hackle.error(error)
+	if (!passed) hackle.error(`Task '${name}' failed`)
 
-	try {
-		await action(args, { flags })
-		hackle.info(`Task '${name}' succeeded`)
-
-		return true
-	} catch (e) {
-		hackle.error(e)
-		hackle.error(`Task '${name}' failed`)
-
-		return false
-	}
+	return passed
 }
 
 export interface RunCommandOptions {
@@ -201,4 +195,18 @@ export async function go() {
 	const { task } = parseArgs()
 
 	runTask(task)
+
+//
+// Private Helpers
+//
+
+async function executeTask(task: Task): Promise<{ passed: boolean; error?: any }> {
+	const { args, flags } = parseArgs()
+
+	try {
+		await task(args, { flags })
+		return { passed: true }
+	} catch (e) {
+		return { passed: false, error: e }
+	}
 }
