@@ -31,4 +31,6 @@ dirt.addTask('default', async () => {
 	print('hi')
 })
 
-dirt.go()
+dirt.go((_, ctx) => {
+	if (ctx.flags.watch) dirt.restartWhenChanged()
+})

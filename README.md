@@ -40,7 +40,9 @@ dirt.addTask('dev', async (_, ctx) => {
 	})
 })
 
-dirt.go()
+dirt.go((_, ctx) => {
+	if (ctx.flags.watch) dirt.restartWhenChanged()
+})
 ```
 
 ## CLI

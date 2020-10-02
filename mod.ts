@@ -7,6 +7,7 @@ import { addWatcher } from './lib/watch.ts'
 import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
 import { makeHackle } from 'https://deno.land/x/hackle/mod.ts'
+import { dumbFilepath } from './lib/dumb-filepath.ts'
 
 const tasks: Map<string, Task> = new Map()
 
@@ -47,6 +48,7 @@ export type Action = Task
 export const logger = new Logger()
 
 const hackle = makeHackle()
+let pids: Set<number> = new Set()
 
 /**
  * Adds a task.  The task will run once 'dirt.go()' is called if the first CLI arg matches
@@ -68,9 +70,11 @@ export async function runTask(name: string): Promise<boolean> {
 		return false
 	}
 
+	hackle.info(`Running task '${name}'...`)
+
 	const { passed, error } = await executeTask(task)
 
-	if (passed) hackle.info(`Ran task '${name}'`)
+	if (passed) hackle.info(`Task '${name}' executed`)
 	if (error) hackle.error(error)
 	if (!passed) hackle.error(`Task '${name}' failed`)
 
@@ -103,13 +107,21 @@ export async function runCommand(cmd: string | string[], options: RunCommandOpti
 		env: options.env || {},
 	})
 
+	pids.add(process.pid)
+
+	let res: { success: boolean; output: string }
+
 	if (options.storeOutput) {
 		const decoder = new TextDecoder()
-		return {
+		res = {
 			success: (await process.status()).success,
 			output: decoder.decode(await process.output()) + decoder.decode(await process.stderrOutput()),
 		}
-	} else return { success: (await process.status()).success, output: `` }
+	} else res = { success: (await process.status()).success, output: `` }
+
+	pids.delete(process.pid)
+
+	return res
 }
 
 export interface RunFileOptions extends RunCommandOptions {
@@ -189,14 +201,39 @@ export async function bundle(path: string): Promise<string> {
 	return await Deno.readTextFile(file)
 }
 
-/** Restarts the current process */
-export function restart(file = '.config/tasks.ts') {
+/**
+ * Restarts the current process
+ *
+ * Only works when the tasks file is queued by the CLI
+ *
+ * NOTE: You have Dirt CLI (https://github.com/Vehmloewff/dirt#cli) version `0.2.0` or greater for this function to work properly.
+ * If you have a CLI version lower than `0.2`, this command will just exit and it won't start up again.
+ *
+ * ```ts
+ * restartWhenChanged() // Exits the current process and runs '.config/tasks.ts'
+ *
+ * // If your tasks file is not in the default location (`.config/tasks.ts`),
+ * // you can pass in an optional filepath
+ * restartWhenChanged('.custom-tasks-file')
+ *
+ * // Or you can just pass in `import.meta.url`
+ * restartWhenChanged(import.meta.url)
+ * ```
+ */
+export function restartWhenChanged(file = '.config/tasks.ts') {
+	file = dumbFilepath(file)
+
+	let timeout: any
 	addWatcher(files => {
-		if (files.indexOf(file) !== -1) {
-			hackle.notice(`Restart ${file}\n`)
-			runCommand(['deno', 'run', '-A', '--unstable', ...importMap(), file, ...Deno.args])
-			Deno.exit()
-		}
+		clearTimeout(timeout)
+		setTimeout(() => {
+			if (files.indexOf(file) !== -1) {
+				hackle.notice(`'${file}' changed.  Restarting process...`)
+
+				pids.forEach(pid => Deno.kill(pid, Deno.Signal.SIGINT))
+				Deno.exit(71) // The special number listened to by the dirt cli
+			}
+		}, 300)
 	})
 }
 
@@ -208,7 +245,9 @@ export function restart(file = '.config/tasks.ts') {
 export async function go(beforeTasks?: Task) {
 	const { task } = parseArgs()
 
-	if (beforeTasks) runTask(task)
+	if (beforeTasks) executeTask(beforeTasks)
+
+	runTask(task)
 }
 
 //
