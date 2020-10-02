@@ -40,6 +40,7 @@ export interface CTX {
 
 export type Task = (args: string[], ctx: CTX) => MaybePromise<void>
 
+/** @deprecated Will be removed in the next major release.  Use `Task` instead */
 export type Action = Task
 
 /** @deprecated Will be removed in the next major release.  Use https://deno.land/x/logger instead */
