@@ -2,24 +2,30 @@ export type Watcher = (files: string[], kind: 'any' | 'access' | 'create' | 'mod
 
 const watchers: Watcher[] = []
 
+let watcherIsRunning = false
+
 export async function addWatcher(watcher: Watcher) {
 	watchers.push(watcher)
 
-	if (watchers.length !== 1) return
+	if (!watcherIsRunning) {
+		watcherIsRunning = true
 
-	const emitter = Deno.watchFs(['.'], { recursive: true })
+		if (watchers.length !== 1) return
 
-	for await (const event of emitter) {
-		watchers.forEach(watcher =>
-			watcher(
-				event.paths
-					// All files must be relative without the './' part
-					.map(file => {
-						// The files currently have the pattern '$CWD/./$FILEPATH'
-						return file.slice(Deno.cwd().length + 3)
-					}),
-				event.kind
+		const emitter = Deno.watchFs(['.'], { recursive: true })
+
+		for await (const event of emitter) {
+			watchers.forEach(watcher =>
+				watcher(
+					event.paths
+						// All files must be relative without the './' part
+						.map(file => {
+							// The files currently have the pattern '$CWD/./$FILEPATH'
+							return file.slice(Deno.cwd().length + 3)
+						}),
+					event.kind
+				)
 			)
-		)
+		}
 	}
 }
