@@ -7,7 +7,6 @@ import { addWatcher } from './lib/watch.ts'
 import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
 import { makeHackle } from 'https://deno.land/x/hackle/mod.ts'
-import { consoleLogger } from 'https://deno.land/x/hackle@v1.0.0/tools.ts'
 
 const tasks: Map<string, Action> = new Map()
 
