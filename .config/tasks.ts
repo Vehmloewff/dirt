@@ -27,6 +27,10 @@ dirt.addTask('dev', async (_, ctx) => {
 	})
 })
 
+dirt.addTask('denomon', (_, ctx) => {
+	dirt.denomon(ctx.flags.watch, '.config/hang.ts', { permissions: { net: true } })
+})
+
 dirt.addTask('default', async () => {
 	print('hi')
 })

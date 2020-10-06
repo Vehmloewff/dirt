@@ -1,3 +1,4 @@
+import 'https://deno.land/x/hackle/init.ts'
 import Logger from 'https://deno.land/x/logger/logger.ts'
 import importMap from './lib/import-map.ts'
 import parseArgs from './lib/parse-args.ts'
@@ -6,7 +7,6 @@ import { globToRegExp } from 'https://deno.land/std/path/mod.ts'
 import { addWatcher } from './lib/watch.ts'
 import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
-import { makeHackle } from 'https://deno.land/x/hackle/mod.ts'
 import { dumbFilepath } from './lib/dumb-filepath.ts'
 
 const tasks: Map<string, Task> = new Map()
@@ -47,7 +47,6 @@ export type Action = Task
 /** @deprecated Will be removed in the next major release.  Use https://deno.land/x/logger instead */
 export const logger = new Logger()
 
-const hackle = makeHackle()
 let pids: Set<number> = new Set()
 
 /**
@@ -92,6 +91,14 @@ export interface RunCommandOptions {
 	storeOutput?: boolean
 
 	env?: { [key: string]: string }
+
+	actionReceiver?: (actions: RunCommandActions) => void
+}
+
+export interface RunCommandActions {
+	pid: number
+	close: () => void
+	kill: () => void
 }
 
 /** Run a CLI command.  If 'options.storeOutput' is true, the stdout and stderr will be printed to the console,
@@ -108,6 +115,9 @@ export async function runCommand(cmd: string | string[], options: RunCommandOpti
 	})
 
 	pids.add(process.pid)
+
+	if (options.actionReceiver)
+		options.actionReceiver({ close: () => process.close(), kill: () => process.kill(Deno.Signal.SIGINT), pid: process.pid })
 
 	let res: { success: boolean; output: string }
 
@@ -140,6 +150,7 @@ export async function runFile(path: string, opts: RunFileOptions = {}): Promise<
 		cwd: opts.cwd,
 		env: opts.env,
 		storeOutput: opts.storeOutput,
+		actionReceiver: opts.actionReceiver,
 	})
 }
 
@@ -181,7 +192,7 @@ export async function runWatchIf(condition: any, glob: string, onChange: (filesC
 					clearTimeout(timeout)
 					timeout = setTimeout(() => {
 						onChange(filteredFiles)
-					}, 300)
+					}, 350)
 				}
 			})
 		})
@@ -233,7 +244,52 @@ export function restartWhenChanged(file = '.config/tasks.ts') {
 				pids.forEach(pid => Deno.kill(pid, Deno.Signal.SIGINT))
 				Deno.exit(71) // The special number listened to by the dirt cli
 			}
-		}, 300)
+		}, 350)
+	})
+}
+
+export interface DenomonOptions extends RunFileOptions {
+	/**
+	 * A glob.  If any of these files change, `denomon` will restart `file` if `condition` is truthy
+	 */
+	watch?: string
+}
+
+/**
+ * Runs a file and then restarts it on changes if `condition` is truthy.
+ */
+export function denomon(condition: any, file: string, options: DenomonOptions = {}): void {
+	const setProcess = () => {
+		let kill: (() => void) | null = null
+
+		const rfo: RunFileOptions = {
+			actionReceiver: actions => {
+				kill = actions.kill
+				if (options.actionReceiver) options.actionReceiver(actions)
+			},
+			args: options.args,
+			cwd: options.cwd,
+			env: options.env,
+			storeOutput: options.storeOutput,
+			permissions: options.permissions,
+		}
+
+		runFile(file, rfo)
+
+		if (kill) return { kill: kill as () => void }
+
+		throw new Error(`actionReceiver was never called`)
+	}
+
+	let process: ReturnType<typeof setProcess>
+
+	runWatchIf(condition, options.watch || file, () => {
+		if (process) {
+			hackle.info(`Restarting '${file}' due to changes...`)
+			process.kill()
+		} else hackle.info(`Starting '${file}'...`)
+
+		process = setProcess()
 	})
 }
 
