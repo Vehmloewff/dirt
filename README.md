@@ -55,7 +55,7 @@ deno install --unstable --allow-run --allow-env --allow-read http://deno.land/x/
 
 After installing the CLI, you can run a particular task like this:
 
-````sh
+```sh
 dirt [task] [options] [args]
 ```
 
@@ -63,7 +63,7 @@ dirt [task] [options] [args]
 
 ```ts
 import * as dirt from 'http://deno.land/x/dirt/mod.ts'
-````
+```
 
 ## Documentation
 
