@@ -2,14 +2,9 @@ import 'https://deno.land/x/hackle/init.ts'
 import * as dirt from '../mod.ts'
 
 dirt.addTask('test', async ([type], ctx) => {
-	let glob = '**/*'
-
-	if (type === 'unit') glob = 'tests/unit/**/*'
-	else if (type) glob = type
-
 	// only watches the file system if the --watch or -w flag is provided
 	await dirt.runWatchIf(ctx.flags.watch, '**/*.ts', async () => {
-		await dirt.runTests(glob)
+		await dirt.runTests('**/*.test.ts', { permissions: { read: true } })
 	})
 })
 

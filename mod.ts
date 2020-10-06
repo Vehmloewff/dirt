@@ -3,11 +3,10 @@ import Logger from 'https://deno.land/x/logger/logger.ts'
 import importMap from './lib/import-map.ts'
 import parseArgs from './lib/parse-args.ts'
 import { recursiveReaddir } from 'https://deno.land/x/recursive_readdir/mod.ts'
-import { globToRegExp } from 'https://deno.land/std/path/mod.ts'
+import { filterFiles } from './lib/filter-files.ts'
 import { addWatcher } from './lib/watch.ts'
 import { filesFromGlob } from './lib/files-from-glob.ts'
 import { DenoPermissions, stringifyPermissions } from './lib/stringify-permissions.ts'
-import { dumbFilepath } from './lib/dumb-filepath.ts'
 
 const tasks: Map<string, Task> = new Map()
 
@@ -40,6 +39,16 @@ export interface CTX {
 }
 
 export type Task = (args: string[], ctx: CTX) => MaybePromise<void>
+
+/** Watch can be a file glob, a file path, either relative or absolute, or an object of `WatchParams` */
+export type Watch = string | WatchParams
+
+export interface WatchParams {
+	/** An array of file globs or paths */
+	include: string[] | string
+	/** An array of file globs or paths */
+	exclude: string[] | string
+}
 
 /** @deprecated Will be removed in the next major release.  Use `Task` instead */
 export type Action = Task
@@ -173,20 +182,18 @@ export async function runTests(glob: string, opts: RunTestsOptions = {}): Promis
 
 /** Calls 'onChange' once, then resolves if 'condition' is truthy.  Otherwise it will watch the files in the cwd that
  * match 'glob' and run 'onChange' every time there is a change them. */
-export async function runWatchIf(condition: any, glob: string, onChange: (filesChanged: string[]) => MaybePromise<void>) {
-	const filterFiles = (files: string[]) => files.filter(file => globToRegExp(glob).test(file))
-
+export async function runWatchIf(condition: any, watch: Watch, onChange: (filesChanged: string[]) => MaybePromise<void>) {
 	let files = await recursiveReaddir('.')
 
 	// Run the change handler once with all the files that pass the glob...
-	await onChange(filterFiles(files))
+	await onChange(filterFiles(files, watch))
 
 	// ...then watch for future changes if condition is truthy
 	if (condition)
 		return new Promise(() => {
 			let timeout: any
 			addWatcher(files => {
-				const filteredFiles = filterFiles(files)
+				const filteredFiles = filterFiles(files, watch)
 
 				if (filteredFiles.length !== 0) {
 					clearTimeout(timeout)
@@ -231,15 +238,14 @@ export async function bundle(path: string): Promise<string> {
  * restartWhenChanged(import.meta.url)
  * ```
  */
-export function restartWhenChanged(file = '.config/tasks.ts') {
-	file = dumbFilepath(file)
-
+export function restartWhenChanged(watch: Watch = '.config/tasks.ts') {
 	let timeout: any
 	addWatcher(files => {
 		clearTimeout(timeout)
 		setTimeout(() => {
-			if (files.indexOf(file) !== -1) {
-				hackle.notice(`'${file}' changed.  Restarting process...`)
+			const filteredFiles = filterFiles(files, watch)
+			if (filteredFiles.length) {
+				hackle.notice(`Changes detected.  Restarting process...`)
 
 				pids.forEach(pid => Deno.kill(pid, Deno.Signal.SIGINT))
 				Deno.exit(71) // The special number listened to by the dirt cli

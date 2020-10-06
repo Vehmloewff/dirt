@@ -1,5 +1,3 @@
-import { dumbFilepath } from './dumb-filepath.ts'
-
 export type Watcher = (files: string[], kind: 'any' | 'access' | 'create' | 'modify' | 'remove') => void
 
 const watchers: Watcher[] = []
@@ -16,14 +14,8 @@ export async function addWatcher(watcher: Watcher) {
 
 		const emitter = Deno.watchFs(['.'], { recursive: true })
 
-		let timeout
 		for await (const event of emitter) {
-			watchers.forEach(watcher =>
-				watcher(
-					event.paths.map(file => dumbFilepath(file)),
-					event.kind
-				)
-			)
+			watchers.forEach(watcher => watcher(event.paths, event.kind))
 		}
 	}
 }
