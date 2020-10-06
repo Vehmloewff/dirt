@@ -1,9 +1,0 @@
-{
-	"imports": {
-		"logger": "https://deno.land/x/logger/logger.ts",
-		"yargs": "https://denopkg.com/yargs/yargs-parser@v20.0.0-deno/deno.ts",
-		"fs": "https://deno.land/std@0.68.0/fs/mod.ts",
-		"read-dir": "https://deno.land/x/recursive_readdir/mod.ts",
-		"path": "https://deno.land/std/path/mod.ts"
-	}
-}
