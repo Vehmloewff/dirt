@@ -78,13 +78,12 @@ export async function runTask(name: string): Promise<boolean> {
 		return false
 	}
 
-	hackle.info(`Running task '${name}'...`)
+	print(`[dirt] Run task '${name}'`)
 
 	const { passed, error } = await executeTask(task)
 
-	if (passed) hackle.info(`Task '${name}' executed`)
 	if (error) hackle.error(error)
-	if (!passed) hackle.error(`Task '${name}' failed`)
+	if (!passed) hackle.error(`[dirt] Task '${name}' failed`)
 
 	return passed
 }
