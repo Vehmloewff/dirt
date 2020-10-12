@@ -66,11 +66,16 @@ export async function addTask(name: string, task: Task) {
 	tasks.set(name, task)
 }
 
+export interface RunTaskOptions {
+	argsOverride?: string[]
+	flagsOverride?: CTX['flags']
+}
+
 /**
  * Run a certain task.  You should wait until all tasks have been added to do this.
  * @returns A boolean indicating if the task succeeded or not.
  */
-export async function runTask(name: string): Promise<boolean> {
+export async function runTask(name: string, options: RunTaskOptions = {}): Promise<boolean> {
 	const task = tasks.get(name)
 
 	if (!task) {
@@ -80,7 +85,7 @@ export async function runTask(name: string): Promise<boolean> {
 
 	print(`[dirt] Run task '${name}'`)
 
-	const { passed, error } = await executeTask(task)
+	const { passed, error } = await executeTask(task, options)
 
 	if (error) hackle.error(error)
 	if (!passed) hackle.error(`[dirt] Task '${name}' failed`)
@@ -315,8 +320,11 @@ export async function go(beforeTasks?: Task) {
 // Private Helpers
 //
 
-async function executeTask(task: Task): Promise<{ passed: boolean; error?: any }> {
-	const { args, flags } = parseArgs()
+async function executeTask(task: Task, options: RunTaskOptions = {}): Promise<{ passed: boolean; error?: any }> {
+	const parsed = parseArgs()
+
+	const args = options.argsOverride || parsed.args
+	const flags = options.flagsOverride || parsed.flags
 
 	try {
 		await task(args, { flags })
