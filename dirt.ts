@@ -10,6 +10,7 @@ async function runTasksFile() {
 
 	// 71 is the special number that the tasks file will exit with if it is supposed to restart
 	if (status.code === 71) await runTasksFile()
+	else if (!status.success) Deno.exit(status.code)
 }
 
 if (existsSync(path)) await runTasksFile()
