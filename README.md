@@ -2,7 +2,7 @@
 
 [![deno doc](https://doc.deno.land/badge.svg)](https://doc.deno.land/https/deno.land/x/dirt/mod.ts)
 
-Run your build/run tasks in style!
+A task-focused build/run tool for Deno.
 
 ## Example
 
@@ -12,12 +12,6 @@ Run your build/run tasks in style!
 import * as dirt from 'http://deno.land/x/dirt/mod.ts'
 
 dirt.addTask('test', async ([type], ctx) => {
-	let glob = '**/*'
-
-	if (type === 'unit') glob = 'tests/unit/**/*'
-	else if (type) glob = type
-
-	// only watches the file system if the --watch or -w flag is provided
 	await dirt.watchIf(ctx.flags.watch, '**/*.ts', async () => {
 		await dirt.runTests(glob, {
 			permissions: {
@@ -27,22 +21,7 @@ dirt.addTask('test', async ([type], ctx) => {
 	})
 })
 
-dirt.addTask('bundle', async () => {
-	const code = await dirt.bundle('mod.ts')
-	await dirt.write('.config/public/build.js', code)
-})
-
-dirt.addTask('dev', async (_, ctx) => {
-	await dirt.runCommand('deno run -A https://deno.land/x/serve/mod.ts .config/public')
-
-	await dirt.watchIf(ctx.flags.watch, async () => {
-		await dirt.runTask('bundle')
-	})
-})
-
-dirt.go((_, ctx) => {
-	if (ctx.flags.watch) dirt.restartWhenChanged()
-})
+dirt.go()
 ```
 
 ## CLI
@@ -59,12 +38,19 @@ After installing the CLI, you can run a particular task like this:
 dirt [task] [options] [args]
 ```
 
-## Usage
+The default location for the tasks file is `.config/tasks.ts`, but this can be changed with the `DIRT_TASKS_FILE` env variable.
 
-```ts
-import * as dirt from 'http://deno.land/x/dirt/mod.ts'
+```sh
+export DIRT_TASKS_FILE=tasks.ts
+dirt test -w
 ```
 
-## Documentation
+## Importmap Handling
 
-Docs can be found [here](https://doc.deno.land/https/deno.land/x/dirt/mod.ts).
+When the tasks file is run, `.config/deps.json` will be respected as an import map if it exists.  `dirt.runFile` respects this setting also.
+
+The sought after location of the importmap can be overridden with the `DENO_IMPORTMAP` env variable.
+
+## Runtime Documentation
+
+The runtime docs can be found [here](https://doc.deno.land/https/deno.land/x/dirt/mod.ts).
