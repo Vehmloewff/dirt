@@ -1,4 +1,4 @@
-import 'https://deno.land/x/hackle/init.ts'
+import 'https://deno.land/x/hackle@1.1.0/init.ts'
 import Logger from 'https://deno.land/x/logger/logger.ts'
 import importMap from './lib/import-map.ts'
 import parseArgs from './lib/parse-args.ts'
