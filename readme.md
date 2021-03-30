@@ -28,3 +28,9 @@ Run your task.
 ```
 dirt myTask --watch
 ```
+
+# TODO
+
+-   [ ] Make the help prettier
+-   [ ] Ensure no duplicate options are passed for a particular task
+-   [ ] Allow options of type boolean to be omitted, and just set them to `false`
