@@ -1,4 +1,4 @@
-import { resolve } from 'https://deno.land/std@0.91.0/path/mod.ts
+import { resolve } from 'https://deno.land/std@0.91.0/path/mod.ts'
 
 export type TaskParam = TaskArgument | TaskOptions
 export type TaskArgument = string | number
