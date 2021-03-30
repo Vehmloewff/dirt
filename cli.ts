@@ -17,8 +17,6 @@ else if (tasksFile === '--help' || tasksFile === '-h') {
 	Deno.exit()
 }
 
-tasksFile = `file://${resolve(tasksFile)}`
-
 if (!(await exists(tasksFile))) throw new Error(`Could not find module: ${tasksFile}`)
 
 const tasks = formatDocs(await getDocs(tasksFile))
