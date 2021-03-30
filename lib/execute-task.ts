@@ -5,6 +5,8 @@ export interface TaskOptions {
 }
 
 export async function executeTask(tasksFile: string, task: string, params: TaskParam[]) {
+	console.log(tasksFile)
+
 	const module = await import(tasksFile)
 
 	if (!module[task]) throw new Error(`The checks failed to fully check!`)
