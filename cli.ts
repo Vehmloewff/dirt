@@ -1,41 +1,35 @@
 import { exists } from 'https://deno.land/std@0.85.0/fs/mod.ts'
-import { parse } from 'https://deno.land/std@0.85.0/flags/mod.ts'
-import { logger, shCapture } from './mod.ts'
+import { resolve } from 'https://deno.land/std@0.91.0/path/mod.ts'
+import { parseCliArgs } from './lib/parse-cli-args.ts'
+import { getDocs } from './lib/get-docs.ts'
+import { formatDocs } from './lib/format-docs.ts'
+import { discoverStrategy } from './lib/discover-strategy.ts'
 
-const tasksFile = Deno.args[0]
+let tasksFile = Deno.args[0]
+const tasksArgs = Deno.args.slice(1)
+
+if (!tasksFile) throw new Error(`You must specify a tasks file as the first argument`)
+else if (tasksFile === '--help' || tasksFile === '-h') {
+	console.log(`The documentation is on the README.  https://github.com/Vehmloewff/dirt#readme`)
+	Deno.exit()
+} else if (tasksFile === '--version' || tasksFile === '-v') {
+	console.log(`1.0.0`)
+	Deno.exit()
+}
+
+tasksFile = resolve(tasksFile)
 
 if (!(await exists(tasksFile))) throw new Error(`Could not find module: ${tasksFile}`)
 
-const output = await getJsonDocInfo()
+const tasks = formatDocs(await getDocs(tasksFile))
 
-interface Param {
-	description: string
+if (!tasks.length) {
+	console.log(
+		`No tasks found at ${tasksFile}\n\nTo see the docs on how to create a task, visit https://github.com/Vehmloewff/dirt#creating-tasks`
+	)
+	Deno.exit()
 }
 
-interface Task {
-	name: string
-	passArgs: boolean
-	params: []
-}
+const { args, options } = parseCliArgs(tasksArgs)
 
-const tasks: Task[] = []
-
-// Sort out the params here
-output.forEach((def: any) => {
-	// if (def.kind === 'function') {
-	// 	consol
-	// }
-	console.log(def)
-})
-
-async function getJsonDocInfo() {
-	const { output, code, error } = await shCapture(`deno doc ${tasksFile} --json`)
-
-	if (code) throw error
-
-	try {
-		return JSON.parse(output)
-	} catch (e) {
-		throw new Error(`Could not parse the output from deno doc`)
-	}
-}
+await discoverStrategy(tasksFile, tasks, args, options)

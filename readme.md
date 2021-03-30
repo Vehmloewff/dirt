@@ -1,11 +1,30 @@
-```ts
-import * as dirt from 'https://deno.land/x/dirt/mod.ts'
+# Dirt Version 1 - Unstable
 
-export interface HelloParams {
-	/** @default true */
-	watch?: boolean
+_It's a lot better._
+
+# Example
+
+Create a typescript file in your project somewhere that looks something like this:
+
+```ts
+export interface MyTaskParams {
+	watch: boolean
 }
 
-/** Say hello to your favorite character */
-export function hello(params: HelloParams) {}
+/** A short description here */
+export function myTask(params: MyTaskParams) {
+	console.log(`It's my task!  Watch: ${params.watch}`)
+}
+```
+
+Create an alias for the dirt CLI. Replace `<tasks_file_path>` with the path to the file you created in the last step.
+
+```sh
+alias dirt="deno run -A --unstable https://denopkg.com/Vehmloewff/dirt@v1/cli.ts <tasks_file_path>"
+```
+
+Run your task.
+
+```
+dirt myTask --watch
 ```
