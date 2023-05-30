@@ -1,38 +1,22 @@
-# Dirt
+# Devops
 
-Run TS functions as tasks. It's ridiculously simple.
+Run TS functions as devops tasks. It's ridiculously simple.
 
-## Installation
+## CLI Installation
 
-```shell
-deno install -Af --name dirt https://deno.land/x/dirt@1.0.0/main.ts
+```sh
+deno install https://code.jikno.com/devops@1.0.0/main.ts -A --name devops --force
 ```
 
-## Example
-
-Create a `devops.ts` file in the root directory of your project...
-
-```ts
-export function foo(args: string[]) {
-	console.log(`Task '${foo}' was called with args: ${args.join(', ')}`)
-}
-```
-
-... then, run the `foo` task that was just created:
-
-```shell
-dirt --foo arg1 arg2
-```
-
-## Detailed Usage
+## CLI Usage
 
 ```
 USAGE: devops [...tasks] [...options] [...arguments]
 
 Tasks:
-  A task is any function or variable exported from \`devops.ts\` or \`devops/mod.ts\`. All
-  tasks must specified in long option notation (with two dashes), or, if it is only one
-  letter long, in alias notation (with one dash). All tasks will be converted
+  A task is any function or variable exported from \`devops.ts\`. All tasks must
+  specified in long option notation (with two dashes), or if it is only one
+  letter doing, in alias notation (with one dash). All tasks will be converted
   to camelCase before calling a function.
 
 Options:
@@ -83,7 +67,7 @@ If no tasks are specified, the default export of the `devops.ts` file will be ca
 
 ### Environments
 
-The environment is always `dev` unless the`--staging`or `--production` flags are passed.
+The environment is always `dev` unless the`--staging`or`--production` flags are passed.
 
 Task will be able to access the resolved environment in the `ENV` environment variable.
 

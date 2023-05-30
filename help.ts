@@ -1,32 +1,4 @@
-# Dirt
-
-Run TS functions as tasks. It's ridiculously simple.
-
-## Installation
-
-```shell
-deno install -Af --name dirt https://deno.land/x/dirt@1.0.0/main.ts
-```
-
-## Example
-
-Create a `devops.ts` file in the root directory of your project...
-
-```ts
-export function foo(args: string[]) {
-	console.log(`Task '${foo}' was called with args: ${args.join(', ')}`)
-}
-```
-
-... then, run the `foo` task that was just created:
-
-```shell
-dirt --foo arg1 arg2
-```
-
-## Detailed Usage
-
-```
+const basicHelpMessage = `
 USAGE: devops [...tasks] [...options] [...arguments]
 
 Tasks:
@@ -75,29 +47,12 @@ Examples:
   "8000" to the \`s\` task only.
 
   > devops --ios --android -ws --mac 81810jvn2u2j s::8000
-```
+`
 
-### No Tasks
+export function generateHelp(definedTasks: string[] | null) {
+	if (!definedTasks) return basicHelpMessage
 
-If no tasks are specified, the default export of the `devops.ts` file will be called like a task.
+	const tasksList = definedTasks.map((task) => `  - ${task}`).join('\n')
 
-### Environments
-
-The environment is always `dev` unless the`--staging`or `--production` flags are passed.
-
-Task will be able to access the resolved environment in the `ENV` environment variable.
-
-### Log Verb
-
-The log verb is always "normal" unless the `--quiet` or `--verbose` flags are passed.
-
-Task will be able to access the resolved environment in the `LOG_LEVEL` environment variable.
-
-## Contributing
-
-Hell yeah!
-
-```shell
-# fork and clone repo
-deno test . --watch
-```
+	return basicHelpMessage.replace('Tasks:', `Tasks:\n${tasksList}\n`)
+}
