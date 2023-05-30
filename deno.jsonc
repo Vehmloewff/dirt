@@ -1,0 +1,11 @@
+{
+	"fmt": {
+		"options": {
+			"useTabs": true,
+			"lineWidth": 140,
+			"semiColons": false,
+			"singleQuote": true,
+			"proseWrap": "never"
+		}
+	}
+}
