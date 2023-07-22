@@ -99,5 +99,5 @@ Hell yeah!
 
 ```shell
 # fork and clone repo
-deno test . --watch
+deno test -A --watch
 ```
