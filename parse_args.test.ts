@@ -12,3 +12,9 @@ Deno.test('should eliminate duplicate args and options', () => {
 
 	asserts.assertEquals(res, { args: ['foo', 'bar'], options: ['b', 'a', 'c'] })
 })
+
+Deno.test('should allow many args', () => {
+	const res = parseArgs(['foo', 'foo', 'bar', '--b', '-abc', 'bin', 'baz', 'bat'])
+
+	asserts.assertEquals(res, { args: ['foo', 'bar', 'bin', 'baz', 'bat'], options: ['b', 'a', 'c'] })
+})
