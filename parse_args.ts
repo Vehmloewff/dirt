@@ -16,7 +16,7 @@ export function parseArgs(inputArgs: string[]) {
 			continue
 		}
 
-		uniquePush(args, inputArg)
+		args.push(inputArg)
 	}
 
 	return { options, args }
