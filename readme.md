@@ -5,7 +5,7 @@ Run TS functions as tasks. It's ridiculously simple.
 ## Installation
 
 ```shell
-deno install -Af --name dirt https://deno.land/x/dirt@1.0.0/main.ts
+deno install -Af --name dirt https://deno.land/x/dirt@1.0.1/main.ts
 ```
 
 ## Example
