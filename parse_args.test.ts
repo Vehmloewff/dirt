@@ -19,8 +19,6 @@ Deno.test('should allow many args', () => {
 	asserts.assertEquals(res, { args: ['foo', 'foo', 'bar', 'bin', 'baz', 'bat'], options: ['b', 'a', 'c'] })
 })
 
-// TODO test to make sure that duplicate args are registered when they are passed
-
 Deno.test('duplicate args are respected', () => {
 	const args = ['11', '7', '4', '4', '5', '6', '7', '1', '1', '1']
 	const res = parseArgs(['--fig', ...args])
